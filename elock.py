@@ -11,6 +11,12 @@ except ImportError:
         def popleft(self):
             return self.pop(0)
 
+class ResourceLocked(Exception): pass
+
+class NotLocked(Exception): pass
+
+class NotResumable(Exception): pass
+
 class Command(object):
 
     def __init__(self, command, **kwargs):
@@ -26,8 +32,12 @@ class Command(object):
         self._deferred.callback(value)
 
     def fail(self, status, msg):
-        # XXX:  Need proper exception classes used here.
-        self._deferred.errback(Exception(msg))
+        exceptions={
+            ('lock', 409): ResourceLocked,
+            ('unlock', 403): NotLocked}
+        e=exceptions.get((self.command, status), Exception)
+        print "Adding exception", e(msg)
+        self._deferred.errback(e(msg))
 
 class ELock(basic.LineReceiver):
     """The elock protocol."""
