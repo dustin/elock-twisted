@@ -62,6 +62,10 @@ class ELock(basic.LineReceiver):
         "Release a lock"
         return self.__cmd('unlock', "unlock " + name)
 
+    def unlock_all(self):
+        "Release all locks"
+        return self.__cmd('unlock_all', "unlock_all")
+
     def stats(self):
         "Get the stats."
         return self.__cmd('stats', 'stats', stats={}, inProgress=False)

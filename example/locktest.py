@@ -32,6 +32,9 @@ def worker(e):
     l.append(e.unlock("not_locked").addCallback(
         print_cb("Released lock: not_locked")).addErrback(
         print_cb("Failed to release lock not_locked")))
+    l.append(e.unlock_all().addCallback(
+        print_cb("Released all locks")).addErrback(
+        print_cb("Failed to release all locks")))
     return defer.DeferredList(l)
 
 d=protocol.ClientCreator(reactor, elock.ELock).connectTCP(sys.argv[1], 11400)
