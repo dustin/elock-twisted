@@ -62,14 +62,38 @@ class ELock(basic.LineReceiver):
         "Release a lock"
         return self.__cmd('unlock', "unlock " + name)
 
+    def stats(self):
+        "Get the stats."
+        return self.__cmd('stats', 'stats', stats={}, inProgress=False)
+
     def __is_success(self, status):
         return status == 200
 
-    def lineReceived(self, line):
+    def __read_status(self, line):
         status, msg = line.split(' ', 1)
-        status=int(status)
-        cmd = self._current.popleft()
-        if self.__is_success(status):
-            cmd.success(msg)
+        return int(status), msg
+
+    def lineReceived(self, line):
+        cmd = self._current[0]
+        if cmd.command == 'stats':
+            if cmd.inProgress:
+                if line == 'END':
+                    self._current.popleft()
+                    cmd.success(cmd.stats)
+                else:
+                    s, k, v = line.split(' ', 2)
+                    cmd.stats[k] = v
+            else:
+                status, msg = self.__read_status(line)
+                if self.__is_success(status):
+                    cmd.inProgress = True
+                else:
+                    self._current.popleft()
+                    cmd.fail(status, msg)
         else:
-            cmd.fail(status, msg)
+            self._current.popleft()
+            status, msg = self.__read_status(line)
+            if self.__is_success(status):
+                cmd.success(msg)
+            else:
+                cmd.fail(status, msg)

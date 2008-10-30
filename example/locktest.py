@@ -23,6 +23,9 @@ def worker(e):
     l.append(e.lock("test").addCallback(
         print_cb("Acquired lock: test")).addErrback(
         print_cb("Failed to acquire lock")))
+    l.append(e.stats().addCallback(
+        print_cb("Stats")).addErrback(
+        print_cb("Failed to get stats")))
     l.append(e.unlock("test").addCallback(
         print_cb("Released lock: test")).addErrback(
         print_cb("Failed to release lock")))
